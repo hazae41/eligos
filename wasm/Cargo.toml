@@ -1,0 +1,24 @@
+[package]
+name = "eligos"
+version = "1.0.0"
+authors = ["hazae41 <hazae41@proton.me>"]
+edition = "2021"
+
+description = "WebAssembly port of secp256k1 signatures and key exchange"
+repository = "https://github.com/hazae41/eligos-wasm"
+license = "Unlicense"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+debug = false
+opt-level = 3
+
+[dependencies]
+wasm-bindgen = { version = "0.2.87", default-features = false, features = ["std"] }
+k256 = { version = "0.13.1", default-features = false, features = ["ecdsa"] }
+ecdsa = { version = "0.16.8", default-features = false, features = ["signing", "verifying"] }
+getrandom = { version = "0.2.10", default-features = false, features = ["js"] }
+rand_core = { version = "0.6.4", default-features = false, features = ["getrandom"] }

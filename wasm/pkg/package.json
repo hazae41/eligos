@@ -1,0 +1,23 @@
+{
+  "name": "eligos",
+  "collaborators": [
+    "hazae41 <hazae41@proton.me>"
+  ],
+  "description": "WebAssembly port of secp256k1 signatures and key exchange",
+  "version": "1.0.0",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hazae41/eligos-wasm"
+  },
+  "files": [
+    "eligos_bg.wasm",
+    "eligos.js",
+    "eligos.d.ts"
+  ],
+  "module": "eligos.js",
+  "types": "eligos.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
