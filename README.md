@@ -1,3 +1,8 @@
+<div>
+  <img align="right" width="128" src="https://user-images.githubusercontent.com/4405263/266082854-61138601-3705-4ff5-b1ea-cf3dae5dbb25.png"/>
+  <p></p>
+</div>
+
 # Eligos
 
 WebAssembly port of Secp256k1 signatures and key exchange
