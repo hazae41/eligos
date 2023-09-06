@@ -105,7 +105,12 @@ impl VerifyingKey {
     }
 
     #[wasm_bindgen]
-    pub fn to_sec1_bytes(&self) -> Vec<u8> {
-        self.inner.to_sec1_bytes().into()
+    pub fn to_sec1_compressed_bytes(&self) -> Vec<u8> {
+        self.inner.to_encoded_point(true).to_bytes().into()
+    }
+
+    #[wasm_bindgen]
+    pub fn to_sec1_uncompressed_bytes(&self) -> Vec<u8> {
+        self.inner.to_encoded_point(false).to_bytes().into()
     }
 }

@@ -28,11 +28,11 @@ test("sign", async () => {
 
   const identity2 = VerifyingKey.recover_from_prehash(hashed, signaturex)
 
-  assert(equals(identity.to_sec1_bytes().bytes, identity2.to_sec1_bytes().bytes))
+  assert(equals(identity.to_sec1_compressed_bytes().bytes, identity2.to_sec1_compressed_bytes().bytes))
 
   const signature2 = secp256k1.Signature.fromCompact(signature.subarray(0, 64))
   const signature3 = signature2.addRecoveryBit(v)
-  const identity3 = signature3.recoverPublicKey(hashed).toRawBytes()
+  const identity3 = signature3.recoverPublicKey(hashed).toRawBytes(true)
 
-  assert(equals(identity.to_sec1_bytes().bytes, identity3))
+  assert(equals(identity.to_sec1_compressed_bytes().bytes, identity3))
 })

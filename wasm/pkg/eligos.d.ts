@@ -70,7 +70,11 @@ export class VerifyingKey {
 /**
 * @returns {Slice}
 */
-  to_sec1_bytes(): Slice;
+  to_sec1_compressed_bytes(): Slice;
+/**
+* @returns {Slice}
+*/
+  to_sec1_uncompressed_bytes(): Slice;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -87,7 +91,8 @@ export interface InitOutput {
   readonly signatureandrecovery_to_bytes: (a: number, b: number) => void;
   readonly verifyingkey_from_sec1_bytes: (a: number, b: number, c: number) => void;
   readonly verifyingkey_recover_from_prehash: (a: number, b: number, c: number, d: number) => void;
-  readonly verifyingkey_to_sec1_bytes: (a: number, b: number) => void;
+  readonly verifyingkey_to_sec1_compressed_bytes: (a: number, b: number) => void;
+  readonly verifyingkey_to_sec1_uncompressed_bytes: (a: number, b: number) => void;
   readonly signingkey_random: () => number;
   readonly __wbg_verifyingkey_free: (a: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;

@@ -314,10 +314,26 @@ export class VerifyingKey {
     /**
     * @returns {Slice}
     */
-    to_sec1_bytes() {
+    to_sec1_compressed_bytes() {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.verifyingkey_to_sec1_bytes(retptr, this.__wbg_ptr);
+            wasm.verifyingkey_to_sec1_compressed_bytes(retptr, this.__wbg_ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v1 = new Slice(r0, r1);
+            ;
+            return v1;
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @returns {Slice}
+    */
+    to_sec1_uncompressed_bytes() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.verifyingkey_to_sec1_uncompressed_bytes(retptr, this.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var v1 = new Slice(r0, r1);
