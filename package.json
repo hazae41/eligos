@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@hazae41/eligos",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "WebAssembly port of Secp256k1 signatures and key exchange",
   "homepage": "https://github.com/hazae41/eligos",
   "repository": "github:hazae41/eligos",
