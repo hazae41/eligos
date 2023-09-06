@@ -6,7 +6,7 @@ import type { Cursor, CursorWriteError } from "@hazae41/cursor"
 /* eslint-disable */
 /**
 */
-export class Signature {
+export class SignatureAndRecovery {
 
   [Symbol.dispose](): void
 
@@ -14,15 +14,7 @@ export class Signature {
 /**
 * @returns {Slice}
 */
-  r(): Slice;
-/**
-* @returns {Slice}
-*/
-  s(): Slice;
-/**
-* @returns {number}
-*/
-  v(): number;
+  to_bytes(): Slice;
 }
 /**
 */
@@ -48,10 +40,37 @@ export class SigningKey {
 */
   to_bytes(): Slice;
 /**
-* @param {Uint8Array} bytes
-* @returns {Signature}
+* @returns {VerifyingKey}
 */
-  sign_prehashed(bytes: Uint8Array): Signature;
+  verifying_key(): VerifyingKey;
+/**
+* @param {Uint8Array} hashed
+* @returns {SignatureAndRecovery}
+*/
+  sign_prehash_recoverable(hashed: Uint8Array): SignatureAndRecovery;
+}
+/**
+*/
+export class VerifyingKey {
+
+  [Symbol.dispose](): void
+
+  free(): void;
+/**
+* @param {Uint8Array} input
+* @returns {VerifyingKey}
+*/
+  static from_sec1_bytes(input: Uint8Array): VerifyingKey;
+/**
+* @param {Uint8Array} hashed
+* @param {SignatureAndRecovery} signature
+* @returns {VerifyingKey}
+*/
+  static recover_from_prehash(hashed: Uint8Array, signature: SignatureAndRecovery): VerifyingKey;
+/**
+* @returns {Slice}
+*/
+  to_sec1_bytes(): Slice;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -62,12 +81,15 @@ export interface InitOutput {
   readonly signingkey_new: () => number;
   readonly signingkey_from_bytes: (a: number, b: number, c: number) => void;
   readonly signingkey_to_bytes: (a: number, b: number) => void;
-  readonly signingkey_sign_prehashed: (a: number, b: number, c: number, d: number) => void;
-  readonly __wbg_signature_free: (a: number) => void;
-  readonly signature_r: (a: number, b: number) => void;
-  readonly signature_s: (a: number, b: number) => void;
-  readonly signature_v: (a: number) => number;
+  readonly signingkey_verifying_key: (a: number) => number;
+  readonly signingkey_sign_prehash_recoverable: (a: number, b: number, c: number, d: number) => void;
+  readonly __wbg_signatureandrecovery_free: (a: number) => void;
+  readonly signatureandrecovery_to_bytes: (a: number, b: number) => void;
+  readonly verifyingkey_from_sec1_bytes: (a: number, b: number, c: number) => void;
+  readonly verifyingkey_recover_from_prehash: (a: number, b: number, c: number, d: number) => void;
+  readonly verifyingkey_to_sec1_bytes: (a: number, b: number) => void;
   readonly signingkey_random: () => number;
+  readonly __wbg_verifyingkey_free: (a: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;

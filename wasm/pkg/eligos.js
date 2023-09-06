@@ -73,6 +73,13 @@ function getArrayU8FromWasm0(ptr, len) {
     return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
 }
 
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
+    }
+    return instance.ptr;
+}
+
 function handleError(f, args) {
     try {
         return f.apply(this, args);
@@ -82,11 +89,11 @@ function handleError(f, args) {
 }
 /**
 */
-export class Signature {
+export class SignatureAndRecovery {
 
     static __wrap(ptr) {
         ptr = ptr >>> 0;
-        const obj = Object.create(Signature.prototype);
+        const obj = Object.create(SignatureAndRecovery.prototype);
         obj.__wbg_ptr = ptr;
 
         return obj;
@@ -106,15 +113,15 @@ export class Signature {
 
   free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_signature_free(ptr);
+        wasm.__wbg_signatureandrecovery_free(ptr);
     }
     /**
     * @returns {Slice}
     */
-    r() {
+    to_bytes() {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.signature_r(retptr, this.__wbg_ptr);
+            wasm.signatureandrecovery_to_bytes(retptr, this.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var v1 = new Slice(r0, r1);
@@ -123,29 +130,6 @@ export class Signature {
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }
-    }
-    /**
-    * @returns {Slice}
-    */
-    s() {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.signature_s(retptr, this.__wbg_ptr);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v1 = new Slice(r0, r1);
-            ;
-            return v1;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
-    }
-    /**
-    * @returns {number}
-    */
-    v() {
-        const ret = wasm.signature_v(this.__wbg_ptr);
-        return ret;
     }
 }
 /**
@@ -227,22 +211,118 @@ export class SigningKey {
         }
     }
     /**
-    * @param {Uint8Array} bytes
-    * @returns {Signature}
+    * @returns {VerifyingKey}
     */
-    sign_prehashed(bytes) {
+    verifying_key() {
+        const ret = wasm.signingkey_verifying_key(this.__wbg_ptr);
+        return VerifyingKey.__wrap(ret);
+    }
+    /**
+    * @param {Uint8Array} hashed
+    * @returns {SignatureAndRecovery}
+    */
+    sign_prehash_recoverable(hashed) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArray8ToWasm0(bytes, wasm.__wbindgen_malloc);
+            const ptr0 = passArray8ToWasm0(hashed, wasm.__wbindgen_malloc);
             const len0 = WASM_VECTOR_LEN;
-            wasm.signingkey_sign_prehashed(retptr, this.__wbg_ptr, ptr0, len0);
+            wasm.signingkey_sign_prehash_recoverable(retptr, this.__wbg_ptr, ptr0, len0);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var r2 = getInt32Memory0()[retptr / 4 + 2];
             if (r2) {
                 throw takeObject(r1);
             }
-            return Signature.__wrap(r0);
+            return SignatureAndRecovery.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+}
+/**
+*/
+export class VerifyingKey {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(VerifyingKey.prototype);
+        obj.__wbg_ptr = ptr;
+
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+
+        return ptr;
+    }
+
+  
+  [Symbol.dispose]() {
+    this.free()
+  }
+
+  free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_verifyingkey_free(ptr);
+    }
+    /**
+    * @param {Uint8Array} input
+    * @returns {VerifyingKey}
+    */
+    static from_sec1_bytes(input) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.verifyingkey_from_sec1_bytes(retptr, ptr0, len0);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return VerifyingKey.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @param {Uint8Array} hashed
+    * @param {SignatureAndRecovery} signature
+    * @returns {VerifyingKey}
+    */
+    static recover_from_prehash(hashed, signature) {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passArray8ToWasm0(hashed, wasm.__wbindgen_malloc);
+            const len0 = WASM_VECTOR_LEN;
+            _assertClass(signature, SignatureAndRecovery);
+            wasm.verifyingkey_recover_from_prehash(retptr, ptr0, len0, signature.__wbg_ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var r2 = getInt32Memory0()[retptr / 4 + 2];
+            if (r2) {
+                throw takeObject(r1);
+            }
+            return VerifyingKey.__wrap(r0);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+        }
+    }
+    /**
+    * @returns {Slice}
+    */
+    to_sec1_bytes() {
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.verifyingkey_to_sec1_bytes(retptr, this.__wbg_ptr);
+            var r0 = getInt32Memory0()[retptr / 4 + 0];
+            var r1 = getInt32Memory0()[retptr / 4 + 1];
+            var v1 = new Slice(r0, r1);
+            ;
+            return v1;
         } finally {
             wasm.__wbindgen_add_to_stack_pointer(16);
         }

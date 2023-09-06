@@ -1,12 +1,12 @@
 extern crate alloc;
 
-use alloc::{boxed::Box, vec::Vec};
+use alloc::vec::Vec;
 
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct SigningKey {
-    pub(crate) inner: Box<k256::ecdsa::SigningKey>,
+    pub(crate) inner: k256::ecdsa::SigningKey,
 }
 
 #[wasm_bindgen]
@@ -18,17 +18,15 @@ impl SigningKey {
 
     #[wasm_bindgen]
     pub fn random() -> Self {
-        let key = k256::ecdsa::SigningKey::random(&mut rand_core::OsRng {});
-        let inner = Box::new(key);
+        let inner = k256::ecdsa::SigningKey::random(&mut rand_core::OsRng {});
 
         Self { inner }
     }
 
     #[wasm_bindgen]
     pub fn from_bytes(input: &[u8]) -> Result<SigningKey, JsError> {
-        let rkey = k256::ecdsa::SigningKey::from_bytes(input.try_into()?);
-        let key = rkey.map_err(|_| JsError::new("SigningKey::from_bytes"))?;
-        let inner = Box::new(key);
+        let result = k256::ecdsa::SigningKey::from_bytes(input.try_into()?);
+        let inner = result.map_err(|_| JsError::new("SigningKey::from_bytes"))?;
 
         Ok(Self { inner })
     }
@@ -39,41 +37,75 @@ impl SigningKey {
     }
 
     #[wasm_bindgen]
-    pub fn sign_prehashed(&self, bytes: &[u8]) -> Result<Signature, JsError> {
-        let rsign = self.inner.sign_recoverable(bytes);
-        let tuple = rsign.map_err(|_| JsError::new("SigningKey::sign_prehashed"))?;
-        let (signature, recovery) = tuple;
-        let (gr, gs) = signature.normalize_s().unwrap_or(signature).split_bytes();
+    pub fn verifying_key(&self) -> VerifyingKey {
+        let inner = self.inner.verifying_key().clone();
 
-        let r = gr.to_vec();
-        let s = gs.to_vec();
-        let v = recovery.to_byte();
+        VerifyingKey { inner }
+    }
 
-        Ok(Signature { r, s, v })
+    #[wasm_bindgen]
+    pub fn sign_prehash_recoverable(&self, hashed: &[u8]) -> Result<SignatureAndRecovery, JsError> {
+        let rsign = self.inner.sign_prehash_recoverable(hashed);
+        let tuple = rsign.map_err(|_| JsError::new("SigningKey::sign_prehash_recoverable"))?;
+        let (signature0, recovery) = tuple;
+
+        let signature = signature0.normalize_s().unwrap_or(signature0);
+
+        Ok(SignatureAndRecovery {
+            signature,
+            recovery,
+        })
     }
 }
 
 #[wasm_bindgen]
-pub struct Signature {
-    pub(crate) r: Vec<u8>,
-    pub(crate) s: Vec<u8>,
-    pub(crate) v: u8,
+pub struct SignatureAndRecovery {
+    pub(crate) signature: k256::ecdsa::Signature,
+    pub(crate) recovery: k256::ecdsa::RecoveryId,
 }
 
 #[wasm_bindgen]
-impl Signature {
+impl SignatureAndRecovery {
     #[wasm_bindgen]
-    pub fn r(&self) -> Vec<u8> {
-        self.r.clone()
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = self.signature.to_bytes().to_vec();
+        bytes.push(self.recovery.to_byte());
+        bytes
+    }
+}
+
+#[wasm_bindgen]
+pub struct VerifyingKey {
+    pub(crate) inner: k256::ecdsa::VerifyingKey,
+}
+
+#[wasm_bindgen]
+impl VerifyingKey {
+    #[wasm_bindgen]
+    pub fn from_sec1_bytes(input: &[u8]) -> Result<VerifyingKey, JsError> {
+        let result = k256::ecdsa::VerifyingKey::from_sec1_bytes(input);
+        let inner = result.map_err(|_| JsError::new("VerifyingKey::from_sec1_bytes"))?;
+
+        Ok(Self { inner })
     }
 
     #[wasm_bindgen]
-    pub fn s(&self) -> Vec<u8> {
-        self.s.clone()
+    pub fn recover_from_prehash(
+        hashed: &[u8],
+        signature: &SignatureAndRecovery,
+    ) -> Result<VerifyingKey, JsError> {
+        let result = k256::ecdsa::VerifyingKey::recover_from_prehash(
+            hashed,
+            &signature.signature,
+            signature.recovery,
+        );
+        let inner = result.map_err(|_| JsError::new("VerifyingKey::recover_from_prehash"))?;
+
+        Ok(VerifyingKey { inner })
     }
 
     #[wasm_bindgen]
-    pub fn v(&self) -> u8 {
-        self.v
+    pub fn to_sec1_bytes(&self) -> Vec<u8> {
+        self.inner.to_sec1_bytes().into()
     }
 }

@@ -7,7 +7,12 @@ jobs:
     name: check
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v3
-    - run: "docker compose up --build"
-    - run: "git status --porcelain"
-    - run: "[[ -z $(git status --porcelain) ]]"
+      - uses: actions/checkout@v3
+      - run: 'docker compose up --build'
+      - run: 'xxd ./wasm/pkg/eligos_bg.wasm'
+      - run: 'cat ./wasm/pkg/eligos_bg.wasm.d.ts'
+      - run: 'cat ./wasm/pkg/eligos.d.ts'
+      - run: 'cat ./wasm/pkg/eligos.js'
+      - run: 'cat ./wasm/pkg/eligos.wasm.d.ts'
+      - run: 'cat ./wasm/pkg/eligos.wasm.js'
+      - run: '[[ -z $(git status --porcelain) ]]'
