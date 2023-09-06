@@ -12,6 +12,6 @@ jobs:
       - run: 'git status --porcelain'
       - uses: actions/upload-artifact@v3
         with:
-          name: output
+          name: pkg
           path: ./wasm/pkg/
       - run: '[[ -z $(git status --porcelain) ]]'
