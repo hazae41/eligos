@@ -1,5 +1,5 @@
 
-import { Ok } from "@hazae41/result"
+import { Copied } from "@hazae41/box"
 
 let wasm;
 
@@ -53,9 +53,16 @@ function getStringFromWasm0(ptr, len) {
 let WASM_VECTOR_LEN = 0;
 
 function passArray8ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 1, 1) >>> 0;
-    getUint8Memory0().set(arg, ptr / 1);
-    WASM_VECTOR_LEN = arg.length;
+    if (getUint8Memory0().buffer === arg.inner.bytes.buffer) {
+      const bytes = arg.unwrap().bytes
+      WASM_VECTOR_LEN = bytes.byteLength;
+      return bytes.byteOffset
+    }
+
+    const bytes = arg.get().bytes
+    const ptr = malloc(bytes.length * 1, 1) >>> 0;
+    getUint8Memory0().set(bytes, ptr / 1);
+    WASM_VECTOR_LEN = bytes.length;
     return ptr;
 }
 
@@ -95,6 +102,7 @@ export class SignatureAndRecovery {
         ptr = ptr >>> 0;
         const obj = Object.create(SignatureAndRecovery.prototype);
         obj.__wbg_ptr = ptr;
+        obj.__wbg_freed = false;
 
         return obj;
     }
@@ -107,11 +115,19 @@ export class SignatureAndRecovery {
     }
 
   
-  [Symbol.dispose]() {
-    this.free()
-  }
+    get freed() {
+        return this.__wbg_freed
+    }
 
-  free() {
+    [Symbol.dispose]() {
+        this.free()
+    }
+
+    free() {
+        if (this.__wbg_freed)
+            return
+        this.__wbg_freed = true
+
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_signatureandrecovery_free(ptr);
     }
@@ -140,6 +156,7 @@ export class SigningKey {
         ptr = ptr >>> 0;
         const obj = Object.create(SigningKey.prototype);
         obj.__wbg_ptr = ptr;
+        obj.__wbg_freed = false;
 
         return obj;
     }
@@ -152,11 +169,19 @@ export class SigningKey {
     }
 
   
-  [Symbol.dispose]() {
-    this.free()
-  }
+    get freed() {
+        return this.__wbg_freed
+    }
 
-  free() {
+    [Symbol.dispose]() {
+        this.free()
+    }
+
+    free() {
+        if (this.__wbg_freed)
+            return
+        this.__wbg_freed = true
+
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_signingkey_free(ptr);
     }
@@ -174,7 +199,7 @@ export class SigningKey {
         return SigningKey.__wrap(ret);
     }
     /**
-    * @param {Uint8Array} input
+    * @param {Box<Copiable>} input
     * @returns {SigningKey}
     */
     static from_bytes(input) {
@@ -218,7 +243,7 @@ export class SigningKey {
         return VerifyingKey.__wrap(ret);
     }
     /**
-    * @param {Uint8Array} hashed
+    * @param {Box<Copiable>} hashed
     * @returns {SignatureAndRecovery}
     */
     sign_prehash_recoverable(hashed) {
@@ -247,6 +272,7 @@ export class VerifyingKey {
         ptr = ptr >>> 0;
         const obj = Object.create(VerifyingKey.prototype);
         obj.__wbg_ptr = ptr;
+        obj.__wbg_freed = false;
 
         return obj;
     }
@@ -259,16 +285,24 @@ export class VerifyingKey {
     }
 
   
-  [Symbol.dispose]() {
-    this.free()
-  }
+    get freed() {
+        return this.__wbg_freed
+    }
 
-  free() {
+    [Symbol.dispose]() {
+        this.free()
+    }
+
+    free() {
+        if (this.__wbg_freed)
+            return
+        this.__wbg_freed = true
+
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_verifyingkey_free(ptr);
     }
     /**
-    * @param {Uint8Array} input
+    * @param {Box<Copiable>} input
     * @returns {VerifyingKey}
     */
     static from_sec1_bytes(input) {
@@ -289,7 +323,7 @@ export class VerifyingKey {
         }
     }
     /**
-    * @param {Uint8Array} hashed
+    * @param {Box<Copiable>} hashed
     * @param {SignatureAndRecovery} signature
     * @returns {VerifyingKey}
     */
@@ -558,6 +592,8 @@ export default __wbg_init;
 
 export class Slice {
 
+  #freed = false
+
   /**
    * @param {number} ptr 
    * @param {number} len 
@@ -583,35 +619,27 @@ export class Slice {
     return getUint8Memory0().subarray(this.start, this.end)
   }
 
+  get freed() {
+    return this.#freed
+  }
+
   /**
    * @returns {void}
    **/
   free() {
+    if (this.#freed)
+      return
+    this.#freed = true
     wasm.__wbindgen_free(this.ptr, this.len * 1);
   }
 
   /**
-   * @returns {Uint8Array}
+   * @returns {Copied}
    **/
   copyAndDispose() {
     const bytes = this.bytes.slice()
     this.free()
-    return bytes
-  }
-
-  /**
-   * @returns {Result<number,never>}
-   */
-  trySize() {
-    return new Ok(this.len)
-  }
-
-  /**
-   * @param {Cursor} cursor 
-   * @returns {Result<void, CursorWriteError>}
-   */
-  tryWrite(cursor) {
-    return cursor.tryWrite(this.bytes)
+    return new Copied(bytes)
   }
 
 }

@@ -1,12 +1,13 @@
 
-import type { Result } from "@hazae41/result"
-import type { Cursor, CursorWriteError } from "@hazae41/cursor"
+import type { Box, Copiable, Copied } from "@hazae41/box"
 
 /* tslint:disable */
 /* eslint-disable */
 /**
 */
 export class SignatureAndRecovery {
+
+  get freed(): boolean
 
   [Symbol.dispose](): void
 
@@ -19,6 +20,8 @@ export class SignatureAndRecovery {
 /**
 */
 export class SigningKey {
+
+  get freed(): boolean
 
   [Symbol.dispose](): void
 
@@ -34,7 +37,7 @@ export class SigningKey {
 * @param {Uint8Array} input
 * @returns {SigningKey}
 */
-  static from_bytes(input: Uint8Array): SigningKey;
+  static from_bytes(input: Box<Copiable>): SigningKey;
 /**
 * @returns {Slice}
 */
@@ -47,11 +50,13 @@ export class SigningKey {
 * @param {Uint8Array} hashed
 * @returns {SignatureAndRecovery}
 */
-  sign_prehash_recoverable(hashed: Uint8Array): SignatureAndRecovery;
+  sign_prehash_recoverable(hashed: Box<Copiable>): SignatureAndRecovery;
 }
 /**
 */
 export class VerifyingKey {
+
+  get freed(): boolean
 
   [Symbol.dispose](): void
 
@@ -60,13 +65,13 @@ export class VerifyingKey {
 * @param {Uint8Array} input
 * @returns {VerifyingKey}
 */
-  static from_sec1_bytes(input: Uint8Array): VerifyingKey;
+  static from_sec1_bytes(input: Box<Copiable>): VerifyingKey;
 /**
 * @param {Uint8Array} hashed
 * @param {SignatureAndRecovery} signature
 * @returns {VerifyingKey}
 */
-  static recover_from_prehash(hashed: Uint8Array, signature: SignatureAndRecovery): VerifyingKey;
+  static recover_from_prehash(hashed: Box<Copiable>, signature: SignatureAndRecovery): VerifyingKey;
 /**
 * @returns {Slice}
 */
@@ -142,17 +147,18 @@ export class Slice {
   get bytes(): Uint8Array
 
   /**
-   * Free the bytes
+   * Is the memory freed?
+   **/
+  get freed(): boolean
+
+  /**
+   * Free the bytes (do nothing if already freed)
    **/
   free(): void
 
   /**
    * Copy the bytes and free them
    **/
-  copyAndDispose(): Uint8Array
-
-  trySize(): Result<number, never>
-
-  tryWrite(cursor: Cursor): Result<void, CursorWriteError>
+  copyAndDispose(): Copied
 
 }

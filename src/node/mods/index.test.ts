@@ -1,3 +1,4 @@
+import { Box, Copied } from "@hazae41/box";
 import { assert, test } from "@hazae41/phobos";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { SigningKey, VerifyingKey, initBundledOnce } from "./index.js";
@@ -17,7 +18,7 @@ test("sign", async () => {
   const keypair = new SigningKey()
   const identity = keypair.verifying_key()
 
-  const signaturex = keypair.sign_prehash_recoverable(hashed)
+  const signaturex = keypair.sign_prehash_recoverable(new Box(new Copied(hashed)))
   const signature = signaturex.to_bytes().bytes
 
   const r = signature.subarray(0, 32)
@@ -26,7 +27,7 @@ test("sign", async () => {
 
   console.log(r, s, v)
 
-  const identity2 = VerifyingKey.recover_from_prehash(hashed, signaturex)
+  const identity2 = VerifyingKey.recover_from_prehash(new Box(new Copied(hashed)), signaturex)
 
   assert(equals(identity.to_sec1_compressed_bytes().bytes, identity2.to_sec1_compressed_bytes().bytes))
 
