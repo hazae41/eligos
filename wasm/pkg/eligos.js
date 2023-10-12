@@ -1,6 +1,3 @@
-
-import { Copied } from "@hazae41/box"
-
 let wasm;
 
 const heap = new Array(128).fill(undefined);
@@ -50,20 +47,11 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
 
-let WASM_VECTOR_LEN = 0;
-
-function passArray8ToWasm0(arg, malloc) {
-    if (getUint8Memory0().buffer === arg.inner.bytes.buffer) {
-      const bytes = arg.unwrap().bytes
-      WASM_VECTOR_LEN = bytes.byteLength;
-      return bytes.byteOffset
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
     }
-
-    const bytes = arg.get().bytes
-    const ptr = malloc(bytes.length * 1, 1) >>> 0;
-    getUint8Memory0().set(bytes, ptr / 1);
-    WASM_VECTOR_LEN = bytes.length;
-    return ptr;
+    return instance.ptr;
 }
 
 let cachedInt32Memory0 = null;
@@ -75,16 +63,13 @@ function getInt32Memory0() {
     return cachedInt32Memory0;
 }
 
-function getArrayU8FromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
-}
+let WASM_VECTOR_LEN = 0;
 
-function _assertClass(instance, klass) {
-    if (!(instance instanceof klass)) {
-        throw new Error(`expected instance of ${klass.name}`);
-    }
-    return instance.ptr;
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8Memory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 
 function handleError(f, args) {
@@ -96,13 +81,14 @@ function handleError(f, args) {
 }
 /**
 */
-export class SignatureAndRecovery {
+export class Memory {
 
-    static __wrap(ptr) {
+    static __wrap(ptr, ptr0, len0) {
         ptr = ptr >>> 0;
-        const obj = Object.create(SignatureAndRecovery.prototype);
+        const obj = Object.create(Memory.prototype);
         obj.__wbg_ptr = ptr;
-        obj.__wbg_freed = false;
+        obj.__wbg_ptr0 = ptr0;
+        obj.__wbg_len0 = len0;
 
         return obj;
     }
@@ -114,9 +100,68 @@ export class SignatureAndRecovery {
         return ptr;
     }
 
-  
-    get freed() {
-        return this.__wbg_freed
+    [Symbol.dispose]() {
+        this.free()
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_memory_free(ptr);
+    }
+    /**
+    * @param {Uint8Array} inner
+    */
+    constructor(inner) {
+        const ptr0 = passArray8ToWasm0(inner, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.memory_new(ptr0, len0);
+        return Memory.__wrap(ret, ptr0, len0);
+    }
+    /**
+    * @returns {number}
+    */
+    ptr() {
+        return this.__wbg_ptr0 ??= wasm.memory_ptr(this.__wbg_ptr);
+    }
+    /**
+    * @returns {number}
+    */
+    len() {
+        return this.__wbg_len0 ??= wasm.memory_len(this.__wbg_ptr);
+    }
+
+    freeNextTick() {
+        setTimeout(() => this.free(), 0);
+        return this;
+    }
+
+    get bytes() {
+        return getUint8Memory0().subarray(this.ptr(), this.ptr() + this.len());
+    }
+    
+    copyAndDispose() {
+        const bytes = this.bytes.slice();
+        this.free();
+        return bytes;
+    }
+}
+/**
+*/
+export class SignatureAndRecovery {
+
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(SignatureAndRecovery.prototype);
+        obj.__wbg_ptr = ptr;
+
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+
+        return ptr;
     }
 
     [Symbol.dispose]() {
@@ -124,28 +169,15 @@ export class SignatureAndRecovery {
     }
 
     free() {
-        if (this.__wbg_freed)
-            return
-        this.__wbg_freed = true
-
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_signatureandrecovery_free(ptr);
     }
     /**
-    * @returns {Slice}
+    * @returns {Memory}
     */
     to_bytes() {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.signatureandrecovery_to_bytes(retptr, this.__wbg_ptr);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v1 = new Slice(r0, r1);
-            ;
-            return v1;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
+        const ret = wasm.signatureandrecovery_to_bytes(this.__wbg_ptr);
+        return Memory.__wrap(ret);
     }
 }
 /**
@@ -156,7 +188,6 @@ export class SigningKey {
         ptr = ptr >>> 0;
         const obj = Object.create(SigningKey.prototype);
         obj.__wbg_ptr = ptr;
-        obj.__wbg_freed = false;
 
         return obj;
     }
@@ -168,20 +199,11 @@ export class SigningKey {
         return ptr;
     }
 
-  
-    get freed() {
-        return this.__wbg_freed
-    }
-
     [Symbol.dispose]() {
         this.free()
     }
 
     free() {
-        if (this.__wbg_freed)
-            return
-        this.__wbg_freed = true
-
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_signingkey_free(ptr);
     }
@@ -199,15 +221,14 @@ export class SigningKey {
         return SigningKey.__wrap(ret);
     }
     /**
-    * @param {Box<Copiable>} input
+    * @param {Memory} input
     * @returns {SigningKey}
     */
     static from_bytes(input) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
-            wasm.signingkey_from_bytes(retptr, ptr0, len0);
+            _assertClass(input, Memory);
+            wasm.signingkey_from_bytes(retptr, input.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -220,20 +241,11 @@ export class SigningKey {
         }
     }
     /**
-    * @returns {Slice}
+    * @returns {Memory}
     */
     to_bytes() {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.signingkey_to_bytes(retptr, this.__wbg_ptr);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v1 = new Slice(r0, r1);
-            ;
-            return v1;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
+        const ret = wasm.signingkey_to_bytes(this.__wbg_ptr);
+        return Memory.__wrap(ret);
     }
     /**
     * @returns {VerifyingKey}
@@ -243,15 +255,14 @@ export class SigningKey {
         return VerifyingKey.__wrap(ret);
     }
     /**
-    * @param {Box<Copiable>} hashed
+    * @param {Memory} hashed
     * @returns {SignatureAndRecovery}
     */
     sign_prehash_recoverable(hashed) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArray8ToWasm0(hashed, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
-            wasm.signingkey_sign_prehash_recoverable(retptr, this.__wbg_ptr, ptr0, len0);
+            _assertClass(hashed, Memory);
+            wasm.signingkey_sign_prehash_recoverable(retptr, this.__wbg_ptr, hashed.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -272,7 +283,6 @@ export class VerifyingKey {
         ptr = ptr >>> 0;
         const obj = Object.create(VerifyingKey.prototype);
         obj.__wbg_ptr = ptr;
-        obj.__wbg_freed = false;
 
         return obj;
     }
@@ -284,33 +294,23 @@ export class VerifyingKey {
         return ptr;
     }
 
-  
-    get freed() {
-        return this.__wbg_freed
-    }
-
     [Symbol.dispose]() {
         this.free()
     }
 
     free() {
-        if (this.__wbg_freed)
-            return
-        this.__wbg_freed = true
-
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_verifyingkey_free(ptr);
     }
     /**
-    * @param {Box<Copiable>} input
+    * @param {Memory} input
     * @returns {VerifyingKey}
     */
     static from_sec1_bytes(input) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
-            wasm.verifyingkey_from_sec1_bytes(retptr, ptr0, len0);
+            _assertClass(input, Memory);
+            wasm.verifyingkey_from_sec1_bytes(retptr, input.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -323,17 +323,16 @@ export class VerifyingKey {
         }
     }
     /**
-    * @param {Box<Copiable>} hashed
+    * @param {Memory} hashed
     * @param {SignatureAndRecovery} signature
     * @returns {VerifyingKey}
     */
     static recover_from_prehash(hashed, signature) {
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            const ptr0 = passArray8ToWasm0(hashed, wasm.__wbindgen_malloc);
-            const len0 = WASM_VECTOR_LEN;
+            _assertClass(hashed, Memory);
             _assertClass(signature, SignatureAndRecovery);
-            wasm.verifyingkey_recover_from_prehash(retptr, ptr0, len0, signature.__wbg_ptr);
+            wasm.verifyingkey_recover_from_prehash(retptr, hashed.__wbg_ptr, signature.__wbg_ptr);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             var r2 = getInt32Memory0()[retptr / 4 + 2];
@@ -346,36 +345,18 @@ export class VerifyingKey {
         }
     }
     /**
-    * @returns {Slice}
+    * @returns {Memory}
     */
     to_sec1_compressed_bytes() {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.verifyingkey_to_sec1_compressed_bytes(retptr, this.__wbg_ptr);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v1 = new Slice(r0, r1);
-            ;
-            return v1;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
+        const ret = wasm.verifyingkey_to_sec1_compressed_bytes(this.__wbg_ptr);
+        return Memory.__wrap(ret);
     }
     /**
-    * @returns {Slice}
+    * @returns {Memory}
     */
     to_sec1_uncompressed_bytes() {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.verifyingkey_to_sec1_uncompressed_bytes(retptr, this.__wbg_ptr);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v1 = new Slice(r0, r1);
-            ;
-            return v1;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
+        const ret = wasm.verifyingkey_to_sec1_uncompressed_bytes(this.__wbg_ptr);
+        return Memory.__wrap(ret);
     }
 }
 
@@ -588,58 +569,3 @@ export async function __wbg_init(input) {
 
 export { initSync }
 export default __wbg_init;
-
-
-export class Slice {
-
-  #freed = false
-
-  /**
-   * @param {number} ptr 
-   * @param {number} len 
-   **/
-  constructor(ptr, len) {
-    this.ptr = ptr
-    this.len = len
-    this.start = (ptr >>> 0) / 1
-    this.end = this.start + len
-  }
-
-  /**
-   * @returns {void}
-   **/
-  [Symbol.dispose]() {
-    this.free()
-  }
-
-  /**
-   * @returns {Uint8Array}
-   **/
-  get bytes() {
-    return getUint8Memory0().subarray(this.start, this.end)
-  }
-
-  get freed() {
-    return this.#freed
-  }
-
-  /**
-   * @returns {void}
-   **/
-  free() {
-    if (this.#freed)
-      return
-    this.#freed = true
-    wasm.__wbindgen_free(this.ptr, this.len * 1);
-  }
-
-  /**
-   * @returns {Copied}
-   **/
-  copyAndDispose() {
-    const bytes = this.bytes.slice()
-    this.free()
-    return new Copied(bytes)
-  }
-
-}

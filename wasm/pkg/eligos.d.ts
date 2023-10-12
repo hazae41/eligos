@@ -1,30 +1,52 @@
-
-import type { Box, Copiable, Copied } from "@hazae41/box"
-
 /* tslint:disable */
 /* eslint-disable */
 /**
 */
-export class SignatureAndRecovery {
-
-  get freed(): boolean
-
+export class Memory {
   [Symbol.dispose](): void
-
   free(): void;
 /**
-* @returns {Slice}
+* @param {Uint8Array} inner
 */
-  to_bytes(): Slice;
+  constructor(inner: Uint8Array);
+/**
+* @returns {number}
+*/
+  ptr(): number;
+/**
+* @returns {number}
+*/
+  len(): number;
+
+  /**
+   * Free on next tick
+   **/
+  freeNextTick(): Memory
+
+  /**
+   * Get the bytes in memory
+   **/
+  get bytes(): Uint8Array
+
+  /**
+   * Copy the bytes and free them
+   **/
+  copyAndDispose(): Uint8Array
+}
+/**
+*/
+export class SignatureAndRecovery {
+  [Symbol.dispose](): void
+  free(): void;
+/**
+* @returns {Memory}
+*/
+  to_bytes(): Memory;
 }
 /**
 */
 export class SigningKey {
-
-  get freed(): boolean
-
   [Symbol.dispose](): void
-
   free(): void;
 /**
 */
@@ -34,52 +56,48 @@ export class SigningKey {
 */
   static random(): SigningKey;
 /**
-* @param {Uint8Array} input
+* @param {Memory} input
 * @returns {SigningKey}
 */
-  static from_bytes(input: Box<Copiable>): SigningKey;
+  static from_bytes(input: Memory): SigningKey;
 /**
-* @returns {Slice}
+* @returns {Memory}
 */
-  to_bytes(): Slice;
+  to_bytes(): Memory;
 /**
 * @returns {VerifyingKey}
 */
   verifying_key(): VerifyingKey;
 /**
-* @param {Uint8Array} hashed
+* @param {Memory} hashed
 * @returns {SignatureAndRecovery}
 */
-  sign_prehash_recoverable(hashed: Box<Copiable>): SignatureAndRecovery;
+  sign_prehash_recoverable(hashed: Memory): SignatureAndRecovery;
 }
 /**
 */
 export class VerifyingKey {
-
-  get freed(): boolean
-
   [Symbol.dispose](): void
-
   free(): void;
 /**
-* @param {Uint8Array} input
+* @param {Memory} input
 * @returns {VerifyingKey}
 */
-  static from_sec1_bytes(input: Box<Copiable>): VerifyingKey;
+  static from_sec1_bytes(input: Memory): VerifyingKey;
 /**
-* @param {Uint8Array} hashed
+* @param {Memory} hashed
 * @param {SignatureAndRecovery} signature
 * @returns {VerifyingKey}
 */
-  static recover_from_prehash(hashed: Box<Copiable>, signature: SignatureAndRecovery): VerifyingKey;
+  static recover_from_prehash(hashed: Memory, signature: SignatureAndRecovery): VerifyingKey;
 /**
-* @returns {Slice}
+* @returns {Memory}
 */
-  to_sec1_compressed_bytes(): Slice;
+  to_sec1_compressed_bytes(): Memory;
 /**
-* @returns {Slice}
+* @returns {Memory}
 */
-  to_sec1_uncompressed_bytes(): Slice;
+  to_sec1_uncompressed_bytes(): Memory;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -88,21 +106,24 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_signingkey_free: (a: number) => void;
   readonly signingkey_new: () => number;
-  readonly signingkey_from_bytes: (a: number, b: number, c: number) => void;
-  readonly signingkey_to_bytes: (a: number, b: number) => void;
+  readonly signingkey_from_bytes: (a: number, b: number) => void;
+  readonly signingkey_to_bytes: (a: number) => number;
   readonly signingkey_verifying_key: (a: number) => number;
-  readonly signingkey_sign_prehash_recoverable: (a: number, b: number, c: number, d: number) => void;
+  readonly signingkey_sign_prehash_recoverable: (a: number, b: number, c: number) => void;
   readonly __wbg_signatureandrecovery_free: (a: number) => void;
-  readonly signatureandrecovery_to_bytes: (a: number, b: number) => void;
-  readonly verifyingkey_from_sec1_bytes: (a: number, b: number, c: number) => void;
-  readonly verifyingkey_recover_from_prehash: (a: number, b: number, c: number, d: number) => void;
-  readonly verifyingkey_to_sec1_compressed_bytes: (a: number, b: number) => void;
-  readonly verifyingkey_to_sec1_uncompressed_bytes: (a: number, b: number) => void;
+  readonly signatureandrecovery_to_bytes: (a: number) => number;
+  readonly verifyingkey_from_sec1_bytes: (a: number, b: number) => void;
+  readonly verifyingkey_recover_from_prehash: (a: number, b: number, c: number) => void;
+  readonly verifyingkey_to_sec1_compressed_bytes: (a: number) => number;
+  readonly verifyingkey_to_sec1_uncompressed_bytes: (a: number) => number;
+  readonly __wbg_memory_free: (a: number) => void;
+  readonly memory_new: (a: number, b: number) => number;
+  readonly memory_ptr: (a: number) => number;
+  readonly memory_len: (a: number) => number;
   readonly signingkey_random: () => number;
   readonly __wbg_verifyingkey_free: (a: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
 }
 
@@ -126,39 +147,3 @@ export function initSync(module: SyncInitInput): InitOutput;
 * @returns {Promise<InitOutput>}
 */
 export function __wbg_init (module_or_path?: InitInput | Promise<InitInput>): Promise<InitOutput>;
-
-
-export class Slice {
-
-  readonly ptr: number
-
-  readonly len: number
-
-  constructor(ptr: number, len: number);
-
-  /**
-   * Free the bytes
-   **/
-  [Symbol.dispose](): void
-
-  /**
-   * Get the bytes in memory
-   **/
-  get bytes(): Uint8Array
-
-  /**
-   * Is the memory freed?
-   **/
-  get freed(): boolean
-
-  /**
-   * Free the bytes (do nothing if already freed)
-   **/
-  free(): void
-
-  /**
-   * Copy the bytes and free them
-   **/
-  copyAndDispose(): Copied
-
-}
